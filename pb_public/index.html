@@ -117,13 +117,18 @@
             }
             return 0;
         })
+
         //put locuciones on the screen
         lccArr.forEach(lcc => {
             const loc = document.createElement('dt')
             loc.classList.add('loc')
-            loc.innerText = lcc.locucion // FIXME: put search term word between <dfn>
+            loc.appendChild(gen_span_with_i(lcc.locucion, search, false))
+                
             box.appendChild(loc)
             const lc_dfn_arr = lcc['@expand'].definiciones
+            lc_dfn_arr.sort((a, b)=> {
+                return a.indice - b.indice;
+            })
             genDefs(lc_dfn_arr, 'lc')
         })
 
@@ -147,12 +152,14 @@
                 prp.classList.add('prop')
                 //definicion 
                 // TODO: put within <dfn> when encountering the same word as the query (search constant)
-                const txt = document.createElement('span')
-                txt.innerText = element.definicion;
+                const txt = gen_span_with_i(element.definicion, search, false)
+                // const txt = document.createElement('span')
+                // txt.innerText = element.definicion;
                 //ejemplo
                 const ej = document.createElement('dd')
                 ej.classList.add('ej');
                 ej.innerText = element.ejemplo
+                //ej.appendChild(gen_span_with_i(element.ejemplo, search, false))
                 //final
                 def.appendChild(ind)
                 if (type !== 'lc') def.appendChild(gnr)
@@ -166,9 +173,11 @@
         }
 
         function gen_span_with_i(string, keyword, markdown) {
+            const span = document.createElement('span')
+            keyword = keyword.toLowerCase()
+            const k_length = keyword.length
             if (markdown) {
                 var arr = string.split('*')
-                const span = document.createElement('span')
                 arr.forEach((ele, i) => {
                     if (i % 2 !== 0) {
                         const it = document.createElement('i')
@@ -179,8 +188,37 @@
                         span.appendChild(txt)
                     }
                 })
-                return span
+            } else {
+                const first_char = keyword[0].toLowerCase()
+                keyword = keyword.toLowerCase()
+                var last_block_end = 0
+                for (let i = 0; i < string.length; i++) {
+                    const curr_char = string[i].toLowerCase()
+                    if (curr_char === first_char //if found keyword
+                        && !isLetter(string[i + k_length]) //next letter to the match is not part of the alphabet
+                        && string.slice(i, i + k_length).toLowerCase() === keyword
+                    ) {
+                        const txt = document.createTextNode(string.slice(last_block_end, i))
+                        span.appendChild(txt)
+                        const dfn = document.createElement('dfn')
+                        dfn.innerText = string.slice(i, i + k_length + 1)
+                        span.appendChild(dfn)
+                        i += k_length - 1
+                        last_block_end = i + k_length -1 
+                    }
+                }
+                const txt = document.createTextNode(string.slice(last_block_end, string.length))
+                span.appendChild(txt)
             }
+            return span
+        }
+
+        function isLetter(str) {
+            const alphabet = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"]
+            const letters = ['ñ', 'á', 'é', 'í', 'ó', 'ú', 'ü']
+            const arr = letters.concat(alphabet)
+            if (typeof str !== 'string') return false
+            return str.length === 1 && arr.includes(str.toLowerCase());
         }
 
 
