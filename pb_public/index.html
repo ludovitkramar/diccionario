@@ -1,12 +1,191 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Diccionario</title>
 </head>
+
 <body>
-    
+    <div id="page">
+        <div id="header">
+            <div id="logo"></div>
+        </div>
+        <div id="body">
+            <div id="searchContainer">
+                <form action="" id="searchForm">
+                    <input type="text" name="entrada" id="searchBox" required placeholder="Escriba aquí para buscar"
+                        autofocus>
+                    <input type="submit" value="Buscar">
+                </form>
+            </div>
+            <div id="entry">
+                <article>
+                    <dl id="definitions">
+                        <dt id="word">sol (unchanged)</dt>
+                        <dd class="etimologia">Del lat. <i>sol, solis</i>.</dd>
+                        <dd class="def">
+                            <strong>1. </strong>
+                            <span class="prop" title="nombre masculino">m.</span>
+                            Estrella luminosa, centro del sistema planetario en que está situada la Tierra.
+                        </dd>
+                        <dd class="ej">
+                            El solsticio es la época en que el Sol se halla en uno de los trópicos.
+                        </dd>
+                        <dd class="def">
+                            <strong>2. </strong>
+                            <span class="prop" title="nombre masculino">m.</span>
+                            Cualquier estrella luminosa que es centro de un sistema planetario.
+                        </dd>
+                        <dd class="def">
+                            <strong>3. </strong>
+                            <span class="prop" title="nombre masculino">m.</span>
+                            Luz, calor o influjo del <dfn>sol</dfn>.
+                        </dd>
+                        <dd class="ej">
+                            Sentarse al sol. Tomar el sol. Entrar el sol en una habitación. Sufrir soles y nieves.
+                        </dd>
+                        <dt class="loc">
+                            <dfn>sol</dfn> de justicia
+                        </dt>
+                        <dd class="def">
+                            <strong>1. </strong>
+                            <span class="prop" title="nombre masculino">m.</span>
+                            <dfn>sol</dfn> fuerte y ardiente que calienta y se deja sentir mucho.
+                        </dd>
+                    </dl>
+                </article>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import PocketBase from '/scripts/pocketbase.es.mjs'
+        var $ = function (id) { return document.getElementById(id) }
+        const client = new PocketBase('http://localhost:8090');
+
+        const search = window.location.search.split('=')[1].toLowerCase() //user's search term
+
+        const records = await client.records.getFullList('words', 1 /* batch size */, {
+            filter: `palabra = "${search}"`,
+        });
+
+        // if (records[0].id) console.log(records[0].id);
+        const id = records[0].id //id of our search term
+
+        const data = await client.records.getOne('words', id, { //query result
+            expand: 'definiciones,locuciones.definiciones',
+        });
+
+        console.log(data);
+
+        //put the response in html form
+
+        const box = $('definitions') //container
+        box.innerHTML = '';
+
+        //palabra
+        const wrd = document.createElement('dt')
+        wrd.id = 'word'
+        wrd.innerText = search
+        box.appendChild(wrd)
+
+        //etimologia
+        const eti = document.createElement('dd')
+        eti.classList.add('etimologia')
+        eti.appendChild(gen_span_with_i(data.etimologia, '', true))
+        box.appendChild(eti)
+
+        var dfnArr = data['@expand'].definiciones; //array of the definitions' object
+        dfnArr.sort((a, b) => {
+            return a.indice - b.indice;
+        })
+
+        //generate definitions elements
+        genDefs(dfnArr);
+
+        //get and sort locuciones elements
+        var lccArr = data['@expand'].locuciones;
+        lccArr.sort((a, b) => {
+            if (a.locucion < b.locucion) {
+                return -1;
+            }
+            if (a.locucion > b.locucion) {
+                return 1;
+            }
+            return 0;
+        })
+        //put locuciones on the screen
+        lccArr.forEach(lcc => {
+            const loc = document.createElement('dt')
+            loc.classList.add('loc')
+            loc.innerText = lcc.locucion // FIXME: put search term word between <dfn>
+            box.appendChild(loc)
+            const lc_dfn_arr = lcc['@expand'].definiciones
+            genDefs(lc_dfn_arr, 'lc')
+        })
+
+        function genDefs(arr, type) {
+            arr.forEach(element => {
+                //bloque
+                const def = document.createElement('dd');
+                def.classList.add('def');
+                //indice
+                const ind = document.createElement('strong');
+                ind.innerText = element.indice + '. ';
+                //genero (m. f.)
+                const gnr = document.createElement('span')
+                gnr.innerText = element.genero + ' ';
+                if (element.genero === 'm.') gnr.title = 'nombre masculino'
+                if (element.genero === 'f.') gnr.title = 'nombre femenino'
+                gnr.classList.add('prop')
+                // y mas (Coloq. Rel. ... )
+                const prp = document.createElement('span')
+                prp.innerText = element.notas + ' '; // TODO: detect and display title with explanations
+                prp.classList.add('prop')
+                //definicion 
+                // TODO: put within <dfn> when encountering the same word as the query (search constant)
+                const txt = document.createElement('span')
+                txt.innerText = element.definicion;
+                //ejemplo
+                const ej = document.createElement('dd')
+                ej.classList.add('ej');
+                ej.innerText = element.ejemplo
+                //final
+                def.appendChild(ind)
+                if (type !== 'lc') def.appendChild(gnr)
+                def.appendChild(prp)
+                def.appendChild(txt)
+                box.appendChild(def)
+                if (element.ejemplo !== "") { //if there is an example
+                    box.appendChild(ej)
+                }
+            });
+        }
+
+        function gen_span_with_i(string, keyword, markdown) {
+            if (markdown) {
+                var arr = string.split('*')
+                const span = document.createElement('span')
+                arr.forEach((ele, i) => {
+                    if (i % 2 !== 0) {
+                        const it = document.createElement('i')
+                        it.innerText = ele
+                        span.appendChild(it)
+                    } else {
+                        const txt = document.createTextNode(ele)
+                        span.appendChild(txt)
+                    }
+                })
+                return span
+            }
+        }
+
+
+    </script>
+
 </body>
+
 </html>
