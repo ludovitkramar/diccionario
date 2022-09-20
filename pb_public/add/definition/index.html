@@ -53,7 +53,7 @@
         var $ = function (id) { return document.getElementById(id) }
         const client = new PocketBase('http://localhost:8090');
 
-        const search = window.location.search.split('=')[1].toLowerCase() //user's search term
+        const search = decodeURIComponent(window.location.search.split('=')[1].toLowerCase()) //user's search term
 
         console.log(search);
 

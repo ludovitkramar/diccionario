@@ -16,6 +16,7 @@
             <a href="/login" id="login">Login</a>
             <ul>
                 <li><a href="/add">Añadir palabra</a></li>
+                <li><a href="#" id="editLink">Editar esta palabra</a></li>
             </ul>
         </div>
         <div id="body">
@@ -29,37 +30,7 @@
             <div id="entry">
                 <article>
                     <dl id="definitions">
-                        <dt id="word">sol (unchanged)</dt>
-                        <dd class="etimologia">Del lat. <i>sol, solis</i>.</dd>
-                        <dd class="def">
-                            <strong>1. </strong>
-                            <span class="prop" title="nombre masculino">m.</span>
-                            Estrella luminosa, centro del sistema planetario en que está situada la Tierra.
-                        </dd>
-                        <dd class="ej">
-                            El solsticio es la época en que el Sol se halla en uno de los trópicos.
-                        </dd>
-                        <dd class="def">
-                            <strong>2. </strong>
-                            <span class="prop" title="nombre masculino">m.</span>
-                            Cualquier estrella luminosa que es centro de un sistema planetario.
-                        </dd>
-                        <dd class="def">
-                            <strong>3. </strong>
-                            <span class="prop" title="nombre masculino">m.</span>
-                            Luz, calor o influjo del <dfn>sol</dfn>.
-                        </dd>
-                        <dd class="ej">
-                            Sentarse al sol. Tomar el sol. Entrar el sol en una habitación. Sufrir soles y nieves.
-                        </dd>
-                        <dt class="loc">
-                            <dfn>sol</dfn> de justicia
-                        </dt>
-                        <dd class="def">
-                            <strong>1. </strong>
-                            <span class="prop" title="nombre masculino">m.</span>
-                            <dfn>sol</dfn> fuerte y ardiente que calienta y se deja sentir mucho.
-                        </dd>
+
                     </dl>
                 </article>
             </div>
@@ -71,7 +42,7 @@
         var $ = function (id) { return document.getElementById(id) }
         const client = new PocketBase('http://localhost:8090');
 
-        const search = window.location.search.split('=')[1].toLowerCase() //user's search term
+        const search = decodeURIComponent(window.location.search.split('=')[1].toLowerCase()) //user's search term
 
         const records = await client.records.getFullList('words', 1 /* batch size */, {
             filter: `palabra = "${search}"`,
@@ -96,6 +67,9 @@
         wrd.id = 'word'
         wrd.innerText = search
         box.appendChild(wrd)
+
+        //enlace para editar
+        $('editLink').href = `/edit?entrada=${search}`
 
         //etimologia
         const eti = document.createElement('dd')
@@ -128,10 +102,10 @@
             const loc = document.createElement('dt')
             loc.classList.add('loc')
             loc.appendChild(gen_span_with_i(lcc.locucion, search, false))
-                
+
             box.appendChild(loc)
             const lc_dfn_arr = lcc['@expand'].definiciones
-            lc_dfn_arr.sort((a, b)=> {
+            lc_dfn_arr.sort((a, b) => {
                 return a.indice - b.indice;
             })
             genDefs(lc_dfn_arr, 'lc')
@@ -209,7 +183,7 @@
                         dfn.innerText = string.slice(i, i + k_length + 1)
                         span.appendChild(dfn)
                         i += k_length - 1
-                        last_block_end = i + k_length -1 
+                        last_block_end = i + k_length - 1
                     }
                 }
                 const txt = document.createTextNode(string.slice(last_block_end, string.length))

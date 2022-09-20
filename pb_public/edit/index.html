@@ -16,17 +16,24 @@
             <a href="/login" id="login">Login</a>
         </div>
         <div id="body">
+            <div id="searchContainer">
+                <form action="" id="searchForm">
+                    <input type="text" name="entrada" id="searchBox" required placeholder="Escriba aquí para buscar"
+                        autofocus>
+                    <input type="submit" value="Buscar">
+                </form>
+            </div>
             <div id="entry">
-                <h2 id="word">palabra</h2>
+                <h2><a id="word">...</a></h2>
                 <hr>
                 <h3>Definiciones</h3>
                 <ul id="defs">
-                    <li>Sin definiciones ... <a href="/add/definition?entrada=word">Añadir definición</a></li>
+                    <li>...</li>
                 </ul>
                 <hr>
                 <h3>Locuciones</h3>
                 <ul id="locs">
-                    <li>Sin locuciones ... <a href="/add/locution?entrada=word">Añadir locución</a></li>
+                    <li>...</li>
                 </ul>
 
             </div>
@@ -38,7 +45,7 @@
         var $ = function (id) { return document.getElementById(id) }
         const client = new PocketBase('http://localhost:8090');
 
-        const search = window.location.search.split('=')[1].toLowerCase() //user's search term
+        const search = decodeURIComponent(window.location.search.split('=')[1].toLowerCase()) //user's search term
 
         const records = await client.records.getFullList('words', 1 /* batch size */, {
             filter: `palabra = "${search}"`,
@@ -82,6 +89,7 @@
 
         //display the data and generate elements
         $('word').innerText = search
+        $('word').href = `/?entrada=${search}`
         $('defs').innerHTML = `<li><a href="/add/definition?entrada=${search}">Añadir definición</a></li>`;
         $('locs').innerHTML = `<li><a href="/add/locution?entrada=${search}">Añadir locución</a></li>`;
         if (defs_present) {
@@ -94,7 +102,7 @@
                 li.innerText = JSON.stringify(element) + " "
                 link.innerText = 'Editar definición'
                 li.appendChild(link)
-                link.href = `/edit/definition/entrada?=${def_id}`
+                link.href = `/edit/definition?entrada=${def_id}`
                 $('defs').appendChild(li)
             });
         }
@@ -108,7 +116,7 @@
                 //li.innerText = JSON.stringify(element)
                 link.innerText = 'Editar locución'
                 li.appendChild(link)
-                link.href = `/edit/locution/entrada?=${lcc_id}`
+                link.href = `/edit/locution?entrada=${lcc_id}`
                 $('locs').appendChild(li)
             });
         }
