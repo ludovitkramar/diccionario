@@ -17,13 +17,13 @@
         </div>
         <div id="body">
             <div id="entry">
-                <form id="newWord">
+                <form id="newWord" action="javascript:void(0);">
                     <label for="">
                         Nueva palabra: <br>
                         <input type="text" name="palabra" id="palabra" required></label>
                     <br>
                     <label for="">
-                        Etimologia: <br>
+                        Etimología: <br>
                         <input type="text" name="etimologia" id="etimologia">
                     </label>
                     <br>
@@ -38,6 +38,24 @@
         var $ = function (id) { return document.getElementById(id) }
         const client = new PocketBase('http://localhost:8090');
 
+        $('newWord').addEventListener('submit', newWord)
+
+        async function newWord() {
+            var d = new FormData($('newWord'))
+            const palabra = d.get('palabra').toLowerCase()
+            const etimologia = d.get('etimologia')
+            const data = {
+                palabra: palabra,
+                etimologia: etimologia,
+            }
+            try {
+                const record = await client.records.create('words', data);
+                window.location = `/edit?entrada=${palabra}`
+            } catch (error) {
+                alert(error)
+            }
+            console.log(palabra, etimologia);
+        }
     </script>
 </body>
 

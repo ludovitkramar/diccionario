@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="/scripts/username.mjs" defer type="module"></script>
+    <title>Añadir definición</title>
+</head>
+
+<body>
+    <div id="page">
+        <div id="header">
+            <div id="logo"></div>
+            <a href="/login" id="login">Login</a>
+        </div>
+        <div id="body">
+            <div id="entry">
+                <form id="newDef" action="javascript:void(0);">
+                    <label>
+                        Índice:<br>
+                        <input type="number" name="indice" id="indice" required min="1">
+                    </label><br>
+                    <label>
+                        Género:<br>
+                        <input type="text" name="genero" id="genero" placeholder="ej.: m.">
+                    </label><br>
+                    <label for="">
+                        Notas:<br>
+                        <input type="text" name="notas" id="notas" placeholder="ej.: Coloq. ">
+                    </label><br>
+                    <label>
+                        Definición: <br>
+                        <input type="text" name="definicion" id="definicion" required>
+                    </label><br>
+                    <label for="">
+                        Ejemplo:<br>
+                        <input type="text" name="ejemplo" id="ejemplo">
+                    </label><br>
+                    <label>
+                        Palabra asociada: <br>
+                        <input type="text" name="palabra" id="palabra" readonly required>
+                    </label><br>
+                    <input type="submit" value="Añadir">
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import PocketBase from '/scripts/pocketbase.es.mjs'
+        var $ = function (id) { return document.getElementById(id) }
+        const client = new PocketBase('http://localhost:8090');
+
+        const search = window.location.search.split('=')[1].toLowerCase() //user's search term
+
+        console.log(search);
+
+        const records = await client.records.getFullList('words', 1 /* batch size */, {
+            filter: `palabra = "${search}"`,
+        });
+
+        const id = records[0].id //id of our search term
+
+        //put id in the form 
+        $('palabra').value = id;
+        $('newDef').addEventListener('submit', newDef)
+
+        async function newDef() {
+            var d = new FormData($('newDef'))
+            const data = {
+                "indice": d.get('indice'),
+                "genero": d.get('genero'),
+                "notas": d.get('notas'),
+                "definicion": d.get('definicion'),
+                "ejemplo": d.get('ejemplo'),
+                "palabra": id
+            }
+            try {
+                const def_record = await client.records.create('definitions', data);
+                //register relation to the word itself
+                var word_data = await client.records.getOne('words', id);
+                word_data.definiciones.push(def_record.id);
+                const word_record = await client.records.update('words', id, word_data)
+                alert('Definición añadida.')
+                window.location = `/edit?entrada=${search}`
+            } catch (error) {
+                alert(error)
+            }
+        }
+    </script>
+</body>
+
+</html>

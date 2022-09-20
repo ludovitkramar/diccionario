@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="/scripts/username.mjs" defer type="module"></script>
+    <title>Editar entrada</title>
+</head>
+
+<body>
+    <div id="page">
+        <div id="header">
+            <div id="logo"></div>
+            <a href="/login" id="login">Login</a>
+        </div>
+        <div id="body">
+            <div id="entry">
+                <h2 id="word">palabra</h2>
+                <hr>
+                <h3>Definiciones</h3>
+                <ul id="defs">
+                    <li>Sin definiciones ... <a href="/add/definition?entrada=word">Añadir definición</a></li>
+                </ul>
+                <hr>
+                <h3>Locuciones</h3>
+                <ul id="locs">
+                    <li>Sin locuciones ... <a href="/add/locution?entrada=word">Añadir locución</a></li>
+                </ul>
+
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import PocketBase from '/scripts/pocketbase.es.mjs'
+        var $ = function (id) { return document.getElementById(id) }
+        const client = new PocketBase('http://localhost:8090');
+
+        const search = window.location.search.split('=')[1].toLowerCase() //user's search term
+
+        const records = await client.records.getFullList('words', 1 /* batch size */, {
+            filter: `palabra = "${search}"`,
+        });
+
+        const id = records[0].id //id of our search term
+
+        const data = await client.records.getOne('words', id, { //query result
+            expand: 'definiciones,locuciones.definiciones',
+        });
+
+        console.log(data);
+
+        //get all definitions
+        var defs_present = true
+        try {
+            var dfnArr = data['@expand'].definiciones; //array of the definitions' object
+            dfnArr.sort((a, b) => {
+                return a.indice - b.indice;
+            })
+        } catch (error) {
+            defs_present = false
+        }
+
+        //get and sort locuciones elements
+        var lccs_present = true
+        try {
+            var lccArr = data['@expand'].locuciones;
+            lccArr.sort((a, b) => {
+                if (a.locucion < b.locucion) {
+                    return -1;
+                }
+                if (a.locucion > b.locucion) {
+                    return 1;
+                }
+                return 0;
+            })
+        } catch (error) {
+            lccs_present = false
+        }
+
+        //display the data and generate elements
+        $('word').innerText = search
+        $('defs').innerHTML = `<li><a href="/add/definition?entrada=${search}">Añadir definición</a></li>`;
+        $('locs').innerHTML = `<li><a href="/add/locution?entrada=${search}">Añadir locución</a></li>`;
+        if (defs_present) {
+            //gen defs list
+            dfnArr.forEach(element => {
+                const def_id = element.id
+                var li = document.createElement('li')
+                var link = document.createElement('a')
+                //li.innerText = element.definicion
+                li.innerText = JSON.stringify(element) + " "
+                link.innerText = 'Editar definición'
+                li.appendChild(link)
+                link.href = `/edit/definition/entrada?=${def_id}`
+                $('defs').appendChild(li)
+            });
+        }
+        if (lccs_present) {
+            //gen lccs list
+            lccArr.forEach(element => {
+                const lcc_id = element.id
+                var li = document.createElement('li')
+                var link = document.createElement('a')
+                li.innerText = element.locucion + ' '
+                //li.innerText = JSON.stringify(element)
+                link.innerText = 'Editar locución'
+                li.appendChild(link)
+                link.href = `/edit/locution/entrada?=${lcc_id}`
+                $('locs').appendChild(li)
+            });
+        }
+
+    </script>
+</body>
+
+</html>
