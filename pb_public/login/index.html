@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+</head>
+
+<body>
+    <div id="page">
+        <div id="header">
+            <div id="logo"></div>
+        </div>
+        <div id="body">
+            <div id="entry">
+                <form id="userLogin" action="javascript:void(0);">
+                    <label for="">
+                        User name: <br>
+                        <input type="email" name="username" id="username" required></label>
+                    <br>
+                    <label for="">
+                        Password: <br>
+                        <input type="password" name="password" id="password" required>
+                    </label>
+                    <br>
+                    <input type="submit" value="Log in">
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import PocketBase from '/scripts/pocketbase.es.mjs'
+        var $ = function (id) { return document.getElementById(id) }
+        const client = new PocketBase('http://localhost:8090');
+
+        $('userLogin').addEventListener('submit', handleLogin)
+
+        if (client.authStore.isValid) { //if is logged in
+            const userModel = client.authStore.model
+            if (confirm(`You are logged in as ${userModel.email}, \n do you want to log out?`)) {
+                client.authStore.clear();
+            }
+        }
+
+        async function handleLogin() {
+            var formData = new FormData($('userLogin'))
+            const username = formData.get('username');
+            const password = formData.get('password');
+            try {
+                const authData = await client.admins.authViaEmail(username, password);
+                alert('Log in success! Redirecting...')
+                window.location = '/'
+            } catch (error) {
+                alert(error)
+            }
+            return false
+        }
+    </script>
+
+</body>
+
+</html>

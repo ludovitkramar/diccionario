@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="/scripts/username.mjs" defer type="module"></script>
+    <title>Añadir entrada</title>
+</head>
+
+<body>
+    <div id="page">
+        <div id="header">
+            <div id="logo"></div>
+            <a href="/login" id="login">Login</a>
+        </div>
+        <div id="body">
+            <div id="entry">
+                <form id="newWord">
+                    <label for="">
+                        Nueva palabra: <br>
+                        <input type="text" name="palabra" id="palabra" required></label>
+                    <br>
+                    <label for="">
+                        Etimologia: <br>
+                        <input type="text" name="etimologia" id="etimologia">
+                    </label>
+                    <br>
+                    <input type="submit" value="Añadir">
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import PocketBase from '/scripts/pocketbase.es.mjs'
+        var $ = function (id) { return document.getElementById(id) }
+        const client = new PocketBase('http://localhost:8090');
+
+    </script>
+</body>
+
+</html>
