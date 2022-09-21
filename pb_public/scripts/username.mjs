@@ -1,6 +1,6 @@
 import PocketBase from '/scripts/pocketbase.es.mjs'
 var $ = function (id) { return document.getElementById(id) }
-const client = new PocketBase('http://localhost:8090');
+const client = new PocketBase('https://dic.kykvit.com');
 
 console.log('client.authStore.isValid', client.authStore.isValid);
 if (client.authStore.isValid) { //if is logged in
@@ -8,3 +8,6 @@ if (client.authStore.isValid) { //if is logged in
     //alert(userModel.email)
     $('login').innerText = `${userModel.email}`
 }
+
+//http://localhost:8090
+//https://dic.kykvit.com

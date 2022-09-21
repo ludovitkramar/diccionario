@@ -37,7 +37,7 @@
     <script type="module">
         import PocketBase from '/scripts/pocketbase.es.mjs'
         var $ = function (id) { return document.getElementById(id) }
-        const client = new PocketBase('http://localhost:8090');
+        const client = new PocketBase('https://dic.kykvit.com');
 
         $('newWord').addEventListener('submit', newWord)
 
