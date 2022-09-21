@@ -1,0 +1,180 @@
+* {
+    --main_0: #eee;
+    --main_1: #444;
+    --main_2: #666;
+    --comp_0: #111;
+    --comp_1: #eee;
+    --acct_0: #ff6600;
+    --acct_1: #ffaa44;
+    --acct_2: #884400;
+    --acct_3: #442200;
+    --dfn: #d30000;
+    --ej: #8b0d8b;
+    padding: 0;
+    margin: 0;
+    font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+}
+
+*:focus {
+    outline: 2px solid var(--acct_1);
+}
+
+body {
+    background-color: var(--main_1);
+    color: var(--comp_0);
+}
+
+#page {
+    max-width: 100vw;
+    width: 700px;
+    margin: 0 auto;
+}
+
+#header {
+    background-color: var(--main_1);
+    color: var(--comp_1);
+    display: flex;
+}
+
+#header>ul>li {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+}
+
+#header>ul>li>a {
+    font-size: 16px;
+    color: var(--acct_1);
+    display: block;
+    padding: .4em;
+    padding-bottom: .5em;
+    border-radius: .4em;
+    text-decoration: none;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    transition: .2s;
+}
+
+#header>ul>li>a:hover {
+    color: var(--comp_1);
+    background-color: var(--comp_0);
+    border-radius: 1.2em;
+}
+
+#logo {
+    flex-grow: 1;
+    font-size: 38px;
+    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+    padding: .3em;
+}
+
+#body {
+    background-color: var(--main_0);
+    border-radius: .4em;
+    box-shadow: 0px 0px 2px black;
+}
+
+#searchForm {
+    display: flex;
+    width: 100%;
+}
+
+#searchForm>input[type=text] {
+    flex-grow: 1;
+    border-top-left-radius: .4em;
+}
+
+#searchForm>input[type=submit] {
+    border-top-right-radius: .4em;
+}
+
+input {
+    font-size: 16px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+input[type=text] {
+    padding: .5em 1em .5em 1em;
+    border-radius: 0;
+    border: 0;
+    transition: .2s;
+    box-shadow: 0px 0px 2px 0px black;
+}
+
+input[type=text]:focus {
+    z-index: 1;
+}
+
+input[type=submit] {
+    padding: .5em 1em .5em 1em;
+    border-radius: 0;
+    border: 0;
+    transition: .2s;
+    box-shadow: 0px 0px 2px 0px black;
+    background-color: var(--acct_2);
+    color: var(--comp_1);
+    cursor: pointer;
+}
+
+#entry {
+    padding: .5em;
+    font-size: 18px;
+}
+
+#word {
+    font-size: 32px;
+}
+
+.etimologia {
+    background-color: var(--main_2);
+    color: var(--comp_1);
+    padding: .2em;
+    border-radius: .15em;
+}
+
+dfn {
+    color: var(--dfn);
+    font-style: normal;
+}
+
+dd.def {
+    margin-top: .3em;
+    margin-left: 1.2em;
+}
+
+dd.ej {
+    margin-top: .2em;
+    margin-left: 1.5em;
+    font-style: italic;
+    color: var(--ej);
+}
+
+dt.loc {
+    margin-top: .4em;
+    font-size: 22px;
+}
+
+@media only screen and (max-width: 700px) {
+    #header {
+        flex-direction: column;
+    }
+
+    #logo {
+        padding-bottom: 0em;
+    }
+
+    #header>ul>li>a {
+        padding: .2em .4em .4em .4em;
+    }
+
+    #body {
+        margin-top: .4em;
+    }
+}
+
+@media (prefers-color-scheme: dark) {
+    * {
+        --main_0: #eee;
+
+    }
+}
