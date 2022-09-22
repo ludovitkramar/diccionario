@@ -21,21 +21,22 @@
                 <li> <a href="/login" id="login">Login</a></li>
             </ul>
         </div>
-        <div id="body">
+        <div class="body">
             <div id="searchContainer">
-                <form action="" id="searchForm">
+                <form action="javascript:void(0);" id="searchForm">
                     <input type="text" name="entrada" id="searchBox" required placeholder="Escriba aquí para buscar"
                         autofocus>
                     <input type="submit" value="Buscar" id="searchBut">
                 </form>
             </div>
-            <div id="entry">
-                <article>
-                    <dl id="definitions">
 
-                    </dl>
-                </article>
-            </div>
+        </div>
+        <div id="entry" class="fade-from-below">
+            <article>
+                <dl id="definitions">
+
+                </dl>
+            </article>
         </div>
     </div>
 
@@ -43,75 +44,88 @@
         import PocketBase from '/scripts/pocketbase.es.mjs'
         var $ = function (id) { return document.getElementById(id) }
         const client = new PocketBase('https://dic.kykvit.com');
-
-        const search = decodeURIComponent(window.location.search.split('=')[1].toLowerCase()) //user's search term
-
-        const records = await client.records.getFullList('words', 1 /* batch size */, {
-            filter: `palabra = "${search}"`,
-        });
-
-        // if (records[0].id) console.log(records[0].id);
-        const id = records[0].id //id of our search term
-
-        const data = await client.records.getOne('words', id, { //query result
-            expand: 'definiciones,locuciones.definiciones',
-        });
-
-        console.log(data);
-
-        //put the response in html form
-
         const box = $('definitions') //container
-        box.innerHTML = '';
 
-        //palabra
-        const wrd = document.createElement('dt')
-        wrd.id = 'word'
-        wrd.innerText = search
-        box.appendChild(wrd)
+        $('searchForm').addEventListener('submit', doSearch)
 
-        //enlace para editar
-        $('editLink').href = `/edit?entrada=${search}`
+        var search = decodeURIComponent(window.location.search.split('=')[1].toLowerCase()) //user's search term
 
-        //etimologia
-        const eti = document.createElement('dd')
-        eti.classList.add('etimologia')
-        eti.appendChild(gen_span_with_i(data.etimologia, '', true))
-        box.appendChild(eti)
+        lookup_and_display()
 
-        var dfnArr = data['@expand'].definiciones; //array of the definitions' object
-        dfnArr.sort((a, b) => {
-            return a.indice - b.indice;
-        })
+        async function lookup_and_display() {
+            const records = await client.records.getFullList('words', 1 /* batch size */, {
+                filter: `palabra = "${search}"`,
+            });
 
-        //generate definitions elements
-        genDefs(dfnArr);
+            // if (records[0].id) console.log(records[0].id);
+            const id = records[0].id //id of our search term
 
-        //get and sort locuciones elements
-        var lccArr = data['@expand'].locuciones;
-        lccArr.sort((a, b) => {
-            if (a.locucion < b.locucion) {
-                return -1;
-            }
-            if (a.locucion > b.locucion) {
-                return 1;
-            }
-            return 0;
-        })
+            const data = await client.records.getOne('words', id, { //query result
+                expand: 'definiciones,locuciones.definiciones',
+            });
 
-        //put locuciones on the screen
-        lccArr.forEach(lcc => {
-            const loc = document.createElement('dt')
-            loc.classList.add('loc')
-            loc.appendChild(gen_span_with_i(lcc.locucion, search, false))
+            console.log(data);
 
-            box.appendChild(loc)
-            const lc_dfn_arr = lcc['@expand'].definiciones
-            lc_dfn_arr.sort((a, b) => {
+            //put the response in html form
+
+
+            box.innerHTML = '';
+
+            //palabra
+            const wrd = document.createElement('dt')
+            wrd.id = 'word'
+            wrd.innerText = search
+            box.appendChild(wrd)
+
+            //enlace para editar
+            $('editLink').href = `/edit?entrada=${search}`
+
+            //etimologia
+            const eti = document.createElement('dd')
+            eti.classList.add('etimologia')
+            eti.appendChild(gen_span_with_i(data.etimologia, '', true))
+            box.appendChild(eti)
+
+            var dfnArr = data['@expand'].definiciones; //array of the definitions' object
+            dfnArr.sort((a, b) => {
                 return a.indice - b.indice;
             })
-            genDefs(lc_dfn_arr, 'lc')
-        })
+
+            //generate definitions elements
+            genDefs(dfnArr);
+
+            //get and sort locuciones elements
+            var lccArr = data['@expand'].locuciones;
+            lccArr.sort((a, b) => {
+                if (a.locucion < b.locucion) {
+                    return -1;
+                }
+                if (a.locucion > b.locucion) {
+                    return 1;
+                }
+                return 0;
+            })
+
+            //put locuciones on the screen
+            lccArr.forEach(lcc => {
+                const loc = document.createElement('dt')
+                loc.classList.add('loc')
+                loc.appendChild(gen_span_with_i(lcc.locucion, search, false))
+
+                box.appendChild(loc)
+                const lc_dfn_arr = lcc['@expand'].definiciones
+                lc_dfn_arr.sort((a, b) => {
+                    return a.indice - b.indice;
+                })
+                genDefs(lc_dfn_arr, 'lc')
+            })
+        }
+
+        function doSearch() {
+            search = $('searchBox').value.trim();
+            window.location.search = `?entrada=${search}`
+            // lookup_and_display()
+        }
 
         function genDefs(arr, type) {
             arr.forEach(element => {
