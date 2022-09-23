@@ -23,7 +23,7 @@
         </div>
         <div class="body">
             <div id="searchContainer">
-                <form action="javascript:void(0);" id="searchForm">
+                <form action="" id="searchForm">
                     <input type="text" name="entrada" id="searchBox" required placeholder="Escriba aquí para buscar"
                         autofocus>
                     <input type="submit" value="Buscar" id="searchBut">
@@ -38,87 +38,157 @@
                 </dl>
             </article>
         </div>
+
+        <div class="body fade-from-below">
+            <div id="history">
+                <span>Lista de palabras:</span>
+                <table id="latest_entries_table">
+                    <colgroup>
+                        <col>
+                        <col class="time_col two">
+                        <col class="time_col">
+                    </colgroup>
+                    <tr>
+                        <th>Palabra</th>
+                        <th class="selected_up" id="add_col">Creada</th>
+                        <th class="selected_down" id="edit_col">Actualizada</th>
+                    </tr>
+                    <tr class="entry_row">
+                        <td tabindex="100">sol</td>
+                        <td>2020.08.07</td>
+                        <td>2022.09.20</td>
+                    </tr>
+                    <tr class="entry_row">
+                        <td tabindex="101">sol</td>
+                        <td>2020.08.07</td>
+                        <td>2022.09.20</td>
+                    </tr>
+                    <tr class="entry_row">
+                        <td tabindex="102">sol</td>
+                        <td>2020.08.07</td>
+                        <td>2022.09.20</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
     </div>
 
     <script type="module">
         import PocketBase from '/scripts/pocketbase.es.mjs'
-        var $ = function (id) { return document.getElementById(id) }
+        const $ = function (id) { return document.getElementById(id) }
         const client = new PocketBase('https://dic.kykvit.com');
         const box = $('definitions') //container
 
-        $('searchForm').addEventListener('submit', doSearch)
+        //$('searchForm').addEventListener('submit', doSearch)
 
-        var search = decodeURIComponent(window.location.search.split('=')[1].toLowerCase()) //user's search term
+        let search = decodeURIComponent(window.location.search.split('=')[1].toLowerCase()) //user's search term
 
-        lookup_and_display()
+        await lookup_and_display()
+
+        await gen_words_list()
+
+        async function gen_words_list(sort_type = '-created') { // input 'created' '-created' 'updated' '-updated' 'palabra' '-palabra'
+            const words_records = await client.records.getFullList('words', 200 /* batch size */, {
+                sort: sort_type,
+            });
+            var table = $('latest_entries_table')
+
+            console.log(words_records);
+
+            //delete current rows
+            var current_rows = document.getElementsByClassName('entry_row')
+            for (var i = current_rows.length - 1; i >= 0; i--) {
+                current_rows[i].remove()
+            }
+            //generate table
+            var code = ''
+            for (var i = 0; i < words_records.length; i++) {
+                const ct = words_records[i].created
+                const ut = words_records[i].updated
+                code += `
+                    <tr class="entry_row">
+                        <td tabindex="${100 + i}" onclick="window.location.search='?entrada=${words_records[i].palabra}'">${words_records[i].palabra}</td>
+                        <td><time datetime="${ct}" title="${ct}" style="font-size:12.5px;">${ct.slice(0, ct.indexOf(' '))}</td>
+                        <td><time datetime="${ut}" title="${ut}" style="font-size:12.5px;">${ut.slice(0, ut.indexOf(' '))}</td>
+                    </tr>
+                `
+            }
+            table.innerHTML += code;
+        }
 
         async function lookup_and_display() {
             const records = await client.records.getFullList('words', 1 /* batch size */, {
                 filter: `palabra = "${search}"`,
             });
 
-            // if (records[0].id) console.log(records[0].id);
-            const id = records[0].id //id of our search term
+            let data
 
-            const data = await client.records.getOne('words', id, { //query result
-                expand: 'definiciones,locuciones.definiciones',
-            });
+            try {
+                const id = records[0].id //id of our search term
+                data = await client.records.getOne('words', id, { //query result
+                    expand: 'definiciones,locuciones.definiciones',
+                });
+                console.log(data);
+            } catch (error) {
+                $('entry').appendChild(genInfoBox(`No se ha encontrado la palabra «${search}».`))
+                $('definitions').remove()
+            }
 
-            console.log(data);
+            try {
+                //put the response in html form
+                box.innerHTML = '';
 
-            //put the response in html form
+                //palabra
+                const wrd = document.createElement('dt')
+                wrd.id = 'word'
+                wrd.innerText = search
+                box.appendChild(wrd)
 
+                //enlace para editar
+                $('editLink').href = `/edit?entrada=${search}`
 
-            box.innerHTML = '';
+                //etimologia
+                const eti = document.createElement('dd')
+                eti.classList.add('etimologia')
+                eti.appendChild(gen_span_with_i(data.etimologia, '', true))
+                box.appendChild(eti)
 
-            //palabra
-            const wrd = document.createElement('dt')
-            wrd.id = 'word'
-            wrd.innerText = search
-            box.appendChild(wrd)
-
-            //enlace para editar
-            $('editLink').href = `/edit?entrada=${search}`
-
-            //etimologia
-            const eti = document.createElement('dd')
-            eti.classList.add('etimologia')
-            eti.appendChild(gen_span_with_i(data.etimologia, '', true))
-            box.appendChild(eti)
-
-            var dfnArr = data['@expand'].definiciones; //array of the definitions' object
-            dfnArr.sort((a, b) => {
-                return a.indice - b.indice;
-            })
-
-            //generate definitions elements
-            genDefs(dfnArr);
-
-            //get and sort locuciones elements
-            var lccArr = data['@expand'].locuciones;
-            lccArr.sort((a, b) => {
-                if (a.locucion < b.locucion) {
-                    return -1;
-                }
-                if (a.locucion > b.locucion) {
-                    return 1;
-                }
-                return 0;
-            })
-
-            //put locuciones on the screen
-            lccArr.forEach(lcc => {
-                const loc = document.createElement('dt')
-                loc.classList.add('loc')
-                loc.appendChild(gen_span_with_i(lcc.locucion, search, false))
-
-                box.appendChild(loc)
-                const lc_dfn_arr = lcc['@expand'].definiciones
-                lc_dfn_arr.sort((a, b) => {
+                var dfnArr = data['@expand'].definiciones; //array of the definitions' object
+                dfnArr.sort((a, b) => {
                     return a.indice - b.indice;
                 })
-                genDefs(lc_dfn_arr, 'lc')
-            })
+
+                //generate definitions elements
+                genDefs(dfnArr);
+
+                //get and sort locuciones elements
+                var lccArr = data['@expand'].locuciones;
+                lccArr.sort((a, b) => {
+                    if (a.locucion < b.locucion) {
+                        return -1;
+                    }
+                    if (a.locucion > b.locucion) {
+                        return 1;
+                    }
+                    return 0;
+                })
+
+                //put locuciones on the screen
+                lccArr.forEach(lcc => {
+                    const loc = document.createElement('dt')
+                    loc.classList.add('loc')
+                    loc.appendChild(gen_span_with_i(lcc.locucion, search, false))
+
+                    box.appendChild(loc)
+                    const lc_dfn_arr = lcc['@expand'].definiciones
+                    lc_dfn_arr.sort((a, b) => {
+                        return a.indice - b.indice;
+                    })
+                    genDefs(lc_dfn_arr, 'lc')
+                })
+            } catch {
+
+            }
         }
 
         function doSearch() {

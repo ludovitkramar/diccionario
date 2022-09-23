@@ -46,3 +46,12 @@ function isLetter(str) {
     if (typeof str !== 'string') return false
     return str.length === 1 && arr.includes(str.toLowerCase());
 }
+
+function genInfoBox(txt) {
+    var infobox = document.createElement('div')
+    infobox.id = 'info_box'
+    var message = document.createElement('span')
+    message.innerText = txt
+    infobox.appendChild(message)
+    return infobox
+}
