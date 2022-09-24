@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta>
     <script src="/scripts/username.mjs" defer type="module"></script>
     <script src="/scripts/functions.js" defer></script>
     <link rel="stylesheet" href="styles/main.css">
@@ -48,26 +49,20 @@
                         <col class="time_col two">
                         <col class="time_col">
                     </colgroup>
-                    <tr>
-                        <th>Palabra</th>
-                        <th class="selected_up" id="add_col">Creada</th>
-                        <th class="selected_down" id="edit_col">Actualizada</th>
-                    </tr>
-                    <tr class="entry_row">
-                        <td tabindex="100">sol</td>
-                        <td>2020.08.07</td>
-                        <td>2022.09.20</td>
-                    </tr>
-                    <tr class="entry_row">
-                        <td tabindex="101">sol</td>
-                        <td>2020.08.07</td>
-                        <td>2022.09.20</td>
-                    </tr>
-                    <tr class="entry_row">
-                        <td tabindex="102">sol</td>
-                        <td>2020.08.07</td>
-                        <td>2022.09.20</td>
-                    </tr>
+                    <tbody>
+                        <tr>
+                            <th id="p_col">Palabra</th>
+                            <th class="selected_up" id="add_col">Creada</th>
+                            <th class="selected_down" id="edit_col">Actualizada</th>
+                        </tr>
+                    </tbody>
+                    <tbody id="table_word_lists">
+                        <tr class="entry_row">
+                            <td tabindex="100">sample</td>
+                            <td>2020.08.07</td>
+                            <td>2022.09.20</td>
+                        </tr>
+                    </tbody>
                 </table>
             </div>
         </div>
@@ -78,6 +73,11 @@
         const $ = function (id) { return document.getElementById(id) }
         const client = new PocketBase('https://dic.kykvit.com');
         const box = $('definitions') //container
+        $('p_col').addEventListener('click', () => { set_list_order('p'); });
+        $('add_col').addEventListener('pointerdown', () => { set_list_order('c'); });
+        $('edit_col').addEventListener('pointerdown', () => { set_list_order('u'); });
+
+        var table_sort = '-created'
 
         //$('searchForm').addEventListener('submit', doSearch)
 
@@ -85,15 +85,13 @@
 
         await lookup_and_display()
 
-        await gen_words_list()
+        await gen_words_table(table_sort)
 
-        async function gen_words_list(sort_type = '-created') { // input 'created' '-created' 'updated' '-updated' 'palabra' '-palabra'
+        async function gen_words_table(sort_type) { // input 'created' '-created' 'updated' '-updated' 'palabra' '-palabra'
             const words_records = await client.records.getFullList('words', 200 /* batch size */, {
                 sort: sort_type,
             });
-            var table = $('latest_entries_table')
-
-            console.log(words_records);
+            var table = $('table_word_lists')
 
             //delete current rows
             var current_rows = document.getElementsByClassName('entry_row')
@@ -107,7 +105,7 @@
                 const ut = words_records[i].updated
                 code += `
                     <tr class="entry_row">
-                        <td tabindex="${100 + i}" onclick="window.location.search='?entrada=${words_records[i].palabra}'">${words_records[i].palabra}</td>
+                        <td onclick="window.location.search='?entrada=${words_records[i].palabra}'">${words_records[i].palabra}</td>
                         <td><time datetime="${ct}" title="${ct}" style="font-size:12.5px;">${ct.slice(0, ct.indexOf(' '))}</td>
                         <td><time datetime="${ut}" title="${ut}" style="font-size:12.5px;">${ut.slice(0, ut.indexOf(' '))}</td>
                     </tr>
@@ -189,6 +187,49 @@
             } catch {
 
             }
+        }
+
+        function set_list_order(type) { // 'p', 'c', 'u'
+            //table_sort =  one of: 'created' '-created' 'updated' '-updated' 'palabra' '-palabra'
+            //console.log(type);
+            $('edit_col').classList.remove('selected_down')
+            $('edit_col').classList.remove('selected_up')
+            $('add_col').classList.remove('selected_down')
+            $('add_col').classList.remove('selected_up')
+            $('p_col').classList.remove('selected_down')
+            $('p_col').classList.remove('selected_up')
+            switch (type) {
+                case 'p':
+                    if (table_sort === 'palabra') {
+                        table_sort = '-palabra'
+                        $('p_col').classList.add('selected_up')
+                    } else {
+                        table_sort = 'palabra'
+                        $('p_col').classList.add('selected_down')
+                    }
+                    break;
+                case 'c':
+                    if (table_sort === 'created') {
+                        table_sort = '-created'
+                        $('add_col').classList.add('selected_up')
+                    } else {
+                        table_sort = 'created'
+                        $('add_col').classList.add('selected_down')
+                    }
+                    break;
+                case 'u':
+                    if (table_sort === 'updated') {
+                        table_sort = '-updated'
+                        $('edit_col').classList.add('selected_up')
+                    } else {
+                        table_sort = 'updated'
+                        $('edit_col').classList.add('selected_down')
+                    }
+                    break;
+                default:
+                    break;
+            }
+            gen_words_table(table_sort)
         }
 
         function doSearch() {

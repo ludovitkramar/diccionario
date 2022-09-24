@@ -12,6 +12,7 @@
     --dfn: #d30000;
     --ej: #8b0d8b;
     --eti: #1e681e;
+    --link: #366cff;
     padding: 0;
     margin: 0;
 }
@@ -252,28 +253,29 @@ dt.loc {
 }
 
 #latest_entries_table {
-    border-radius: .4em;
+    border-radius: 1em;
     display: table;
     border-collapse: collapse;
     table-layout: fixed;
     width: 100%;
-    overflow: hidden;
     font-size: 15px;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     user-select: none;
-    box-shadow: 0px 0px 5px -1px rgb(53, 53, 53), 0px 2px 2px -1px rgb(77, 77, 77);
+    border: .5px solid rgb(75, 75, 75);
+    background-color: white;
 }
 
 td:first-child {
     cursor: pointer;
 }
 td:first-child:hover {
-    background-color: var(--acct_2);
-    color: var(--comp_1);
-    transition: .2s;
+    /* background-color: var(--acct_2); */
+    color: var(--link);
+    text-decoration: underline;
+    transition: .1s;
 }
 td:first-child:active {
-    background-color: var(--acct_3);
+    /* background-color: var(--acct_3); */
 }
 
 col.time_col {
@@ -289,7 +291,7 @@ col.two {
 th {
     border: .1px solid rgb(75, 75, 75);
     border-top: none;
-    padding: .2em;
+    padding: .5em;
     padding-left: .5em;
     font-size: .8em;
     font-weight: normal;
@@ -312,6 +314,11 @@ th:hover {
     filter: brightness(0.9);
 }
 
+th:active {
+    background-color: var(--main_1);
+    color: var(--comp_1);
+}
+
 th.selected_down::after {
     content: '\2304';
     position: relative;
@@ -330,8 +337,16 @@ td {
     padding: .5em;
 }
 
-tr:nth-child(2n +1) {
-    background-color: #eaeaea;
+tr:last-child {
+    border: none;
+}
+
+tr:hover {
+    background-color: #f2f2f2;
+}
+
+tr {
+    border-bottom: .1px solid rgb(143, 143, 143);
 }
 
 @media only screen and (max-width: 700px) {
