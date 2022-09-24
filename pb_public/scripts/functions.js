@@ -27,10 +27,10 @@ function gen_span_with_i(string, keyword, markdown) {
                 const txt = document.createTextNode(string.slice(last_block_end, i))
                 span.appendChild(txt)
                 const dfn = document.createElement('dfn')
-                dfn.innerText = string.slice(i, i + k_length + 1)
+                dfn.innerText = string.slice(i, i + k_length)
                 span.appendChild(dfn)
-                i += k_length - 1
-                last_block_end = i + k_length - 1
+                last_block_end = i + k_length
+                i += k_length 
             }
         }
         const txt = document.createTextNode(string.slice(last_block_end, string.length))
