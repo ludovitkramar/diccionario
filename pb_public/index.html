@@ -76,12 +76,13 @@
         $('p_col').addEventListener('click', () => { set_list_order('p'); });
         $('add_col').addEventListener('pointerdown', () => { set_list_order('c'); });
         $('edit_col').addEventListener('pointerdown', () => { set_list_order('u'); });
-
+        let search = ''
         var table_sort = '-created'
 
         //$('searchForm').addEventListener('submit', doSearch)
-
-        let search = decodeURIComponent(window.location.search.split('=')[1].toLowerCase()) //user's search term
+        if (window.location.search) {
+            search = decodeURIComponent(window.location.search.split('=')[1].toLowerCase()) //user's search term
+        }
 
         await lookup_and_display()
 
@@ -128,7 +129,11 @@
                 });
                 console.log(data);
             } catch (error) {
-                $('entry').appendChild(genInfoBox(`No se ha encontrado la palabra «${search}».`))
+                var outy = `No se ha encontrado la palabra «${search}».`
+                if (search === '') {
+                    outy = 'Escriba una palabra en la casilla superior.'
+                } 
+                $('entry').appendChild(genInfoBox(outy))
                 $('definitions').remove()
             }
 
